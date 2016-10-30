@@ -17,7 +17,7 @@ var punycode = require('punycode');
 module.exports.signer = function(options) {
     return function(mail, callback) {
         mail.message.transform(function() {
-            return new DKIMSigner(options);
+            return new DKIMSigner(mail.dkimOptions || options);
         });
         setImmediate(callback);
     };

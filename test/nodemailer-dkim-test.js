@@ -39,6 +39,35 @@ describe('nodemailer-dkim tests', function() {
         signer.end(mail);
     });
 
+    it('should get options from mail if mail contains `dkimOptions` objects', function (done) {
+        sinon.spy(dkim, 'DKIMSigner');
+        var signer = new dkim.signer({
+            domainName: 'example.com',
+            keySelector: 'dkim',
+            privateKey: 'obviously invalid key'
+        });
+
+        var dkimTransform;
+        var email = {
+            message : {
+                transform : function (transform) {
+                    dkimTransform = transform();
+                }
+            },
+            dkimOptions : {
+                domainName: 'node.ee',
+                keySelector: 'dkim',
+                privateKey: fs.readFileSync(__dirname + '/fixtures/test_private.pem')
+            }
+        };
+
+
+        signer(email, function () {
+            expect(dkimTransform.options).to.equal(email.dkimOptions);
+            done();
+        });
+    });
+
     it('should verify valid keys', function(done) {
         var dns = require('dns');
         sinon.stub(dns, 'resolveTxt').yields(null, [ [' p = MHwwDQYJKoZIhvcNAQEBBQADawAwaAJhANCx7ncKUfQ8wBUYmMqq6ky8rBB0NL8knBf3+uA7q/CSxpX6sQ8NdFNtEeEd7gu7BWEM7+PkO1P0M78eZOvVmput8BP9R44ARpgHY4V0qSCdUt4rD32nwfjlGbh8p5ua5wIDAQAB'] ]);
