@@ -54,6 +54,54 @@ transporter.sendMail({
 });
 ```
 
+## Per message DKIM options
+
+If per message signatures are requred, then DKIM options can be attached to mail object.
+These will be used instead of options provided in constructor.
+
+```javascript
+var nodemailer = require('nodemailer');
+var transporter = nodemailer.createTransport();
+transporter.use('stream', function (mail, callback) {
+    // If you want to include custom selection logic, you can provide it here
+    if (mail.data.dkim === 'example.com') {
+        // Assign custom DKIM options
+        mail.dkimOptions = {
+            domainName: 'example.com',
+            keySelector: 'test',
+            privateKey: fs.readFileSync('different.private.pem')
+        };
+    }
+});
+
+transporter.use('stream', require('nodemailer-dkim').signer({
+    domainName: 'kreata.ee',
+    keySelector: 'test',
+    privateKey: fs.readFileSync('private.pem')
+}));
+
+// Signed with one DKIM key
+transporter.sendMail({
+    from: 'sender@address',
+    to: 'receiver@address',
+    subject: 'hello',
+    text: 'hello world!'
+}, function(err, response) {
+    console.log(err || response);
+});
+
+// Signed with one DKIM key
+transporter.sendMail({
+    dkim: 'example.com' // Custom logic for selection
+    from: 'sender@address',
+    to: 'receiver@address',
+    subject: 'hello',
+    text: 'hello world!'
+}, function(err, response) {
+    console.log(err || response);
+});
+```
+
 ### Configration verification
 
 You can use this module to check if your configuration is correct and the private key matches the public key listed in DNS
@@ -88,6 +136,3 @@ verifyKeys({
 ## License
 
 **MIT**
-
-
-
